@@ -55,7 +55,7 @@ class Visualizer:
 
             plt.plot([x, x2], [y, y2], 'g-', linewidth=0.25)
 
-        plt.pause(0.00001)
+        # plt.pause(0.00001)
 
 
     def visualize_laser(self, odometry_laser, ranges):
