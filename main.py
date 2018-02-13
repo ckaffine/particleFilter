@@ -4,6 +4,7 @@ import pdb
 import cv2
 import math
 import time
+import os
 
 from MapReader import MapReader
 from MotionModel import MotionModel
@@ -60,8 +61,7 @@ def init_particles_freespace(num_particles, occupancy_map, num_angles=6):
     return X_bar_init
 
 
-def main():
-
+def main(src_path_log='../data/log/robotdata1.log', num_particles=1000):
     """
     Description of variables used
     u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]
@@ -71,12 +71,9 @@ def main():
     X_bar : [num_particles x 4] sized array containing [x, y, theta, wt] values for all particles
     z_t : array of 180 range measurements for each laser scan
     """
+    print "Executing from", src_path_log, "with", num_particles, "particles."
 
-    """
-    Initialize Parameters
-    """
     src_path_map = '../data/map/wean.dat'
-    src_path_log = '../data/log/robotdata1.log'
 
     map_obj = MapReader(src_path_map)
     occupancy_map = map_obj.get_map()
@@ -87,11 +84,12 @@ def main():
     sensor_model = SensorModel(occupancy_map)
     resampler = Resampling()
 
-    num_particles = 5000
     X_bar = init_particles_freespace(num_particles, occupancy_map, 5)
 
     # Saving the visualization
-    vis = Visualizer(skips=20)
+    basename = os.path.basename(src_path_log)
+    basename = os.path.splitext(basename)[0]
+    vis = Visualizer(skips=10, header=basename + "_" + "%05d" % num_particles)
 
     # Localization Main Loop
     first_time_idx = True
@@ -161,4 +159,13 @@ def main():
     vis.close()
 
 if __name__=="__main__":
-    main()
+    if len(sys.argv) >= 3:
+        path = sys.argv[1]
+        particle_count = int(sys.argv[2])
+        main(path, particle_count)
+    elif len(sys.argv) >= 2:
+        path = sys.argv[1]
+        main(path)
+    else:
+        main()
+

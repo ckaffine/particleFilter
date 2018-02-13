@@ -1,4 +1,5 @@
 import math
+import time
 
 from matplotlib import pyplot as plt
 from matplotlib import figure as fig
@@ -6,12 +7,14 @@ from matplotlib import animation as manimation
 
 class Visualizer:
 
-    def __init__(self, skips=10):
+    def __init__(self, skips=10, header=""):
         FFMpegWriter = manimation.writers['ffmpeg']
         metadata = dict(title='Movie Test', artist='Awesome Squad',
                         comment='Fite me!')
         self.writer = FFMpegWriter(fps=15, metadata=metadata)
-        self.writer.setup(plt.figure(1), 'movie.mp4', dpi=100)
+        # Use timestamp for the name
+        name = header + "_" + str(int(round(time.time()))) + ".mp4"
+        self.writer.setup(plt.figure(1), name, dpi=100)
 
         self.frame_count = 0
         self.n = skips
@@ -27,7 +30,9 @@ class Visualizer:
         mng = plt.get_current_fig_manager();  # mng.resize(*mng.window.maxsize())
         plt.ion()
         plt.imshow(occupancy_map, cmap='Greys')
-        plt.axis([0, 800, 0, 800]);
+        plt.axis([0, 800, 0, 800])
+        plt.xlabel("X axis (10cm spacing)")
+        plt.ylabel("Y axis (10cm spacing)")
 
 
     def visualize_timestep(self, X_bar, tstep):
