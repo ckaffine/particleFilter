@@ -270,9 +270,9 @@ def test_error():
     model = SensorModel(occupancy_map)
 
     x = np.linspace(0, 8183, num=2500)
-    y = model._total_error(x, np.ones(x.shape) * 500)
+    y = model._total_error(x, np.ones(x.shape) * 2500)
     plt.plot(x, y)
-    plt.axis([-100, 8283, 0, 100])
+    plt.axis([-100, 8283, 0, 1.5])
     plt.show()
 
 
@@ -280,5 +280,5 @@ def test_error():
 
 if __name__=='__main__':
     # This conducts a bunch of tests on the Sensor Model
-    test_beam_range_measurement()
-    #test_error()
+    # test_beam_range_measurement()
+    test_error()

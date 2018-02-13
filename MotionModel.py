@@ -130,4 +130,8 @@ def visualize_robot_log(filename):
     plt.show()
 
 if __name__=="__main__":
-    visualize_robot_log("../data/log/robotdata1.log")
+    for name in sys.argv[1:]:
+        visualize_robot_log(name)
+
+    if len(sys.argv) == 1:
+        visualize_robot_log("../data/log/robotdata1.log")
