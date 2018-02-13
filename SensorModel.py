@@ -6,6 +6,7 @@ from scipy.stats import norm
 from scipy.stats import expon
 import pdb
 import cv2
+import os.path
 
 from MapReader import MapReader
 
@@ -65,34 +66,31 @@ class SensorModel:
         self.max_x -= 1
         self.min_y, self.min_x = 0, 0
 
-        self.lut = np.load('raycast.npy')
+        if not os.path.exists('raycast.npy'):
+          print "Lookup table not found, generating now"
+          self.gen_lut()
 
+    def gen_lut(self):
+        thRes = 1
+        shape = (self.map.shape[0], self.map.shape[1], 360 / thRes)
+        lut = np.zeros(shape)
+        for x in xrange(shape[0]):
+          for y in xrange(shape[1]):
+            for th in xrange(shape[2]):
+              theta = th * thRes * math.pi / 180
+              xt = np.array((x*10, y*10, theta))
+              lut[x, y, th] = self.raycast(xt)
+        np.save("raycast", lut)
 
-    def beam_range_measurement(self, x_t1):
-        """
-        param[in] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
-        param[out] z_t1* : actual measurement according to map
-        """
-        # Given an [x, y, theta] pair, walk down theta until an obstacle is
-        # found. This will also do the proper unit conversions - the x, y
-        # positions are given in raw centimeters, while the map is given in 10cm
-        # blocks.
-
+    def raycast(self, x_t1):
         step = 0.5 # tiles
-        x_t1 *= np.array((.1, .1, 180 / math.pi))
-        x_t1 = np.floor(x_t1).astype(np.int32)
-        return self.lut[x_t1[:, 0], x_t1[:, 1], x_t1[:, 2]]
 
-#        x = x_t1[0] / 10.0
-#        y = x_t1[1] / 10.0
-#        th = x_t1[2]
+        x = x_t1[0] / 10.0
+        y = x_t1[1] / 10.0
+        th = x_t1[2]
 
-        #return self.lut[int(x), int(y), int(th * 180 / math.pi)]
-
-        """
         dx = step * math.cos(th)
         dy = step * math.sin(th)
-
         while True:
 
             # If the position is outside the boundaries of the map, just return
@@ -114,7 +112,28 @@ class SensorModel:
 
             x += dx
             y += dy
+
+
+    def beam_range_measurement(self, x_t1):
         """
+        param[in] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
+        param[out] z_t1* : actual measurement according to map
+        """
+        # Given an [x, y, theta] pair, walk down theta until an obstacle is
+        # found. This will also do the proper unit conversions - the x, y
+        # positions are given in raw centimeters, while the map is given in 10cm
+        # blocks.
+
+        x_t1 *= np.array((.1, .1, 180 / math.pi))
+        x_t1 = np.floor(x_t1).astype(np.int32)
+        return self.lut[x_t1[:, 0], x_t1[:, 1], x_t1[:, 2]]
+
+#        x = x_t1[0] / 10.0
+#        y = x_t1[1] / 10.0
+#        th = x_t1[2]
+
+        #return self.lut[int(x), int(y), int(th * 180 / math.pi)]
+
 
 
     def _hit_error(self, x, x_star):
