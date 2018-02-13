@@ -70,7 +70,11 @@ class MotionModel:
         w = X_bar[:, 3].reshape((n, 1))
 
         x += trans_hat * np.cos(t + rot1_hat)
+        x = np.minimum(x, 7990)
+        x = np.maximum(x, 0)
         y += trans_hat * np.sin(t + rot1_hat)
+        y = np.minimum(y, 7990)
+        y = np.maximum(y, 0)
         t += rot1_hat + rot2_hat
         t = (t + math.pi) % (2 * math.pi) - math.pi
 
