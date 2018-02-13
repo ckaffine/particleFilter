@@ -33,7 +33,7 @@ class MotionModel:
         return np.random.normal(0, math.sqrt(var), 1)
 
 
-    def _update(self, u_t0, u_t1, x_t0):
+    def _update(self, u_t0, u_t1, X_bar):
         """
         param[in] u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]
         param[in] u_t1 : particle state odometry reading [x, y, theta] at time t [odometry_frame]
@@ -50,25 +50,31 @@ class MotionModel:
         trans = math.sqrt((u_t1[1] - u_t0[1]) ** 2 + (u_t1[0] - u_t0[0]) ** 2)
         rot2 = u_t1[2] - u_t0[2] - rot1
 
-        rot1_hat = rot1 + self.error(self.a1 * rot1 ** 2 +
-                                     self.a2 * trans ** 2)
-        trans_hat = trans + self.error(self.a3 * trans ** 2 +
-                                       self.a4 * rot1 ** 2 +
-                                       self.a4 * rot2 ** 2)
-        rot2_hat = rot2 + self.error(self.a1 * rot2 ** 2 +
-                                     self.a2 * trans ** 2)
+        n = len(X_bar)
 
-        x = x_t0[0] + trans_hat * math.cos(x_t0[2] + rot1_hat)
-        y = x_t0[1] + trans_hat * math.sin(x_t0[2] + rot1_hat)
-        t = x_t0[2] + rot1_hat + rot2_hat
+        rot1_hat = rot1 + np.random.normal(0, np.sqrt(self.a1 * rot1 ** 2 +
+                                                      self.a2 * trans ** 2),
+                                           (n, 1))
+
+        trans_hat = trans + np.random.normal(0, np.sqrt(self.a3 * trans ** 2 +
+                                                        self.a4 * rot1 ** 2 +
+                                                        self.a4 * rot2 ** 2),
+                                             (n, 1))
+        rot2_hat = rot2 + np.random.normal(0, np.sqrt(self.a1 * rot2 ** 2 +
+                                                      self.a2 * trans ** 2),
+                                           (n, 1))
+
+        x = X_bar[:, 0].reshape((n, 1))
+        y = X_bar[:, 1].reshape((n, 1))
+        t = X_bar[:, 2].reshape((n, 1))
+        w = X_bar[:, 3].reshape((n, 1))
+
+        x += trans_hat * np.cos(t + rot1_hat)
+        y += trans_hat * np.sin(t + rot1_hat)
+        t += rot1_hat + rot2_hat
         t = (t + math.pi) % (2 * math.pi) - math.pi
 
-        x_t1 = np.copy(x_t0)
-        x_t1[0] = x
-        x_t1[1] = y
-        x_t1[2] = t
-
-        return x_t1
+        return np.hstack((x, y, t, w))
 
 
     def get_val_from_coord(self, x_t):

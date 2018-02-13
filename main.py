@@ -87,7 +87,7 @@ def main():
     sensor_model = SensorModel(occupancy_map)
     resampler = Resampling()
 
-    num_particles = 1000
+    num_particles = 5000
     X_bar = init_particles_freespace(num_particles, occupancy_map, 5)
 
     # Saving the visualization
@@ -132,11 +132,13 @@ def main():
             print "Skipping all updates because we haven't moved"
             continue
 
+        X_tmp = motion_model.update(u_t0, u_t1, X_bar)
+
         for m in range(0, num_particles):
 
             # ============ Motion Model ==============
-            x_t0 = X_bar[m, 0:3]
-            x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+            x_t1 = X_tmp[m, 0:3]
+            #x_t1 = motion_model.update(u_t0, u_t1, x_t0)
 
             # ============ Sensor Model ==============
             if (meas_type == "L"):
